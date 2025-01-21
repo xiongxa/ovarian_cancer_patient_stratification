@@ -33,13 +33,12 @@ This study explores the combination of Cox models with multimodal data stacking,
 
 ### Prerequisites
 
-- **Programming Language**: Python 3.8+
+- **Programming Language**: Python 3.6+
 - **Key Dependencies**:
   - pandas
   - numpy
   - scikit-learn
   - lifelines
-  - SHAP
   - seaborn
   - matplotlib
   - statsmodels
@@ -49,14 +48,10 @@ This study explores the combination of Cox models with multimodal data stacking,
 
 ```bash
 # Clone the repository
-git clone <repository_url>
+git clone https://github.com/xiongxa/ovarian_cancer_patient_stratification.git
 
 # Navigate to the project directory
-cd <project_directory>
-
-# Create a virtual environment
-python -m venv env
-source env/bin/activate  # For Windows, use env\Scripts\activate
+cd ovarian_cancer_patient_stratification
 
 # Install dependencies
 pip install -r requirements.txt
@@ -66,7 +61,7 @@ pip install -r requirements.txt
 
 ### Data Preparation
 
-Place the multi-omics data files in the `data/` directory. Supported formats include `.csv` and `.tsv`.
+Place the multi-omics data files in the `data/` directory. Supported formats include `.xlsx`. An example named 'parp_stats_800.xlsx' is located in data folder.
 
 ### Steps to Run
 
@@ -79,76 +74,60 @@ Place the multi-omics data files in the `data/` directory. Supported formats inc
 2. **Data Preprocessing**:
 
    ```bash
-   python common/preprocess.py --input data/raw_data.csv --output data/processed_data.csv
+   python feature_selection/data_preprocess.py
    ```
 
 3. **Correlation Analysis**:
 
    ```bash
-   python feature_selection/correlation_analysis.py --data data/processed_data.csv --output data/correlation_results.csv
+   python feature_selection/correlation_analysis.py
    ```
 
 4. **Univariate Analysis**:
 
    ```bash
-   python feature_selection/univariate_analysis.py --data data/processed_data.csv --output data/univariate_results.csv
+   python feature_selection/uni_cox_analysis.py
    ```
-
-5. **Single-modal Model Construction**:
+5. **Feature selection**:
 
    ```bash
-   python model_construction/build_single_modal_model.py --config config/single_modal_config.yaml
+   python feature_selection/feature_selection_combine.py
    ```
 
-6. **Stacking Model Construction**:
+6. **Single-modal Model Construction**:
 
    ```bash
-   python model_construction/train_stacking_model.py --config config/stacking_model_config.yaml
+   python model_construction/multi_cox_stepwise_analysis.py
    ```
 
-### Example Configuration Files
+7. **Stacking Model Construction**:
 
-- `config/single_modal_config.yaml`
-
-```yaml
-model: cox_single_modal
-parameters:
-  input_modal: clinical
-  output_dir: results/single_modal
-```
-
-- `config/stacking_model_config.yaml`
-
-```yaml
-model: cox_stacking
-parameters:
-  base_models:
-    - random_forest
-    - svm
-    - bayesian
-  stacking_method: weighted
-output_dir: results/stacking_model
-```
+   ```bash
+   python model_construction/calculate_km_curve_c_index.py
+   ```
 
 ## File Structure
 
 ```
 ├── common
-│   ├── preprocess.py         # Data preprocessing script
+│   ├── common_modules.py         # Common modules for this project
 ├── config
-│   ├── single_modal_config.yaml # Single-modal model configuration file
-│   ├── stacking_model_config.yaml # Stacking model configuration file
+│   ├── constant.py # constant variables for this project
+│   ├── label_match.xlsx # label match file from Chinese to English
 ├── data
 │   ├── raw_data.csv          # Raw data
-│   ├── processed_data.csv    # Processed data
-│   ├── correlation_results.csv # Correlation analysis results
-│   ├── univariate_results.csv # Univariate analysis results
 ├── feature_selection
+│   ├──data
+│   ├── figures
 │   ├── correlation_analysis.py # Correlation analysis script
-│   ├── univariate_analysis.py  # Univariate analysis script
+│   ├── data_preprocess.py  # Data pre-process
+│   ├── data_statistic_for_article.py 
+│   ├── feature_selection_combine.py  # Feature selection
+│   ├── uni_cox_analysis.py  # Univariate analysis script
 ├── model_construction
-│   ├── build_single_modal_model.py # Single-modal model construction script
-│   ├── train_stacking_model.py     # Stacking model training script
+│   ├── calculate_kendalltau_coeff.py # Calculate kendalltau for each modality 
+│   ├── calculate_km_curve_c_index.py     # Stacking model training script
+│   ├── multi_cox_stepwise_analysis.py     # Single-modal model construction script
 ├── README.md                 # Project documentation
 ├── requirements.txt          # Project dependencies
 ├── setup.sh                  # Environment setup script
@@ -172,5 +151,5 @@ We welcome community contributions! Please follow these steps to submit a Pull R
 
 ## Contact
 
-For any questions, please contact us at [email@example.com](mailto:email@example.com).
+For any questions, please contact us at [xiongxian@hnca.org.cn](xiongxian@hnca.org.cn).
 
