@@ -6,7 +6,7 @@ from scipy.stats import kendalltau
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# 获取环境变量
+# Getting environment variables
 PARP_DIR = os.environ.get('PARP_DIR')
 
 def get_partial_hazard_for_all_model():
@@ -20,7 +20,7 @@ def get_partial_hazard_for_all_model():
     return scores
 
 def draw_kendall_heat_map(scores, line_type):
-    # 计算两两之间的肯德尔等级相关系数
+    # Kendall rank correlation coefficient between pairs was calculated
     models = list(scores.keys())
     models_rename = {'G': 'G', 'clinical': 'C', 'immu': 'P', 'bio': 'B'}
     models_label = [models_rename[name] for name in list(scores.keys())]
@@ -30,27 +30,25 @@ def draw_kendall_heat_map(scores, line_type):
     for i in range(n_models):
         for j in range(i, n_models):
             if i == j:
-                tau_matrix[i, j] = 1.0  # 自相关为1
+                tau_matrix[i, j] = 1.0  # The autocorrelation is 1
             else:
                 tau, _ = kendalltau(scores[models[i]], scores[models[j]])
                 tau_matrix[i, j] = abs(tau)
                 tau_matrix[j, i] = abs(tau)
 
-    # 创建 DataFrame 以便使用 Seaborn 绘图
+    # Create a DataFrame to draw with Seaborn
     tau_df = pd.DataFrame(tau_matrix, index=models_label, columns=models_label)
 
-    # 创建掩码来屏蔽上半部分和对角线
+    # Masks are created to mask the top half and the diagonal
     mask = np.triu(np.ones_like(tau_matrix, dtype=bool), k=1)
 
-    # 画出热力图
     # plt.clf()
     fig, ax = plt.subplots(figsize=(10, 10))
     sns.heatmap(tau_df, mask=mask, annot=True, annot_kws={"size": 20},cmap='coolwarm', vmin=0, vmax=1)
-    # 修改坐标轴刻度字体大小
-    plt.xticks(fontsize=20)  # 修改 x 轴标签字体大小
-    plt.yticks(fontsize=20)  # 修改 y 轴标签字体大小
+    plt.xticks(fontsize=20)  
+    plt.yticks(fontsize=20)  
     
-    # 图例字体大小
+    # Legend font size
     cbar = plt.gca().collections[0].colorbar
     cbar.ax.tick_params(labelsize=20)
     fig.savefig(F'{PARP_DIR}/feature_selection/figures/{line_type}_kendall_heatmap.png',dpi=400,format='png')

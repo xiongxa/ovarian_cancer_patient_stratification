@@ -4,22 +4,22 @@ from statsmodels.tools.tools import add_constant
 import config.constants as CONSTANTS
 import os
 
-# 获取环境变量
+# Getting environment variables
 PARP_DIR = os.environ.get('PARP_DIR')
 
 CLI_THRESH_F, BIO_THRESH_F = 0.1, 0.1  # First line
 CLI_THRESH_P, BIO_THRESH_P = 0.1, 0.1  # Post line
 
 def calculate_VIF(df, output_file):
-    # 添加常数列，因为VIF计算需要截距
+    # Constant columns are added because the VIF calculation requires an intercept
     df_with_const = add_constant(df)
 
-    # 计算VIF
+    # Calculate VIF
     vif_data = pd.DataFrame()
     vif_data["Variable"] = df_with_const.columns
     vif_data["VIF"] = [variance_inflation_factor(df_with_const.values, i) for i in range(df_with_const.shape[1])]
 
-    # 打印VIF数据
+    # print VIF data
     print(vif_data)
     vif_data.to_excel(output_file, index=False)
     return vif_data
@@ -63,41 +63,37 @@ def elastic_net_stability_ana(df, features, output_file):
     from sklearn.preprocessing import StandardScaler
     import numpy as np
 
-    # 划分特征和目标变量
+    # Split features and target variables
     if 'const' in features:
         features.remove('const')
     X = df[features]
     y = df['PFS(month)']
     
     print('features:', features)
-    print(df)
-    print(X)
-    print(y)
     
-    # 划分训练集和测试集
+    # Split the training and test sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # 数据标准化
+    # Data standardization
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    # 创建Elastic Net模型，使用交叉验证选择alpha和l1_ratio
+    # Create an Elastic Net model and select alpha and l1_ratio using cross-validation
     elastic_net = ElasticNetCV(cv=5, random_state=42)
     elastic_net.fit(X_train_scaled, y_train)
 
-    # 打印最佳的alpha和l1_ratio
+    # Print the best alpha and l1_ratio
     print("Best alpha:", elastic_net.alpha_)
     print("Best l1_ratio:", elastic_net.l1_ratio_)
 
-    # 获取选择的特征
+    # Get the selected features
     selected_features = X.columns[elastic_net.coef_ != 0]
 
-    # 打印选中的特征
+    # Print the selected feature
     print("Selected features:", selected_features)
 
-    # 进行稳定性分析
-    # X_stab_test = df[selected_features]
+    # Perform stability analysis
     X_stab_test = df[features]
     num_iterations = 10
     selected_features_matrix = np.zeros((num_iterations, X_stab_test.shape[1]), dtype=bool)
@@ -108,12 +104,9 @@ def elastic_net_stability_ana(df, features, output_file):
         elastic_net.fit(X_train_scaled, y_train)
         selected_features_matrix[i, :] = elastic_net.coef_ != 0
 
-    # 统计特征的稳定性
+    # Stability of statistical features
     feature_stability = np.mean(selected_features_matrix, axis=0)
-
-    # 打印特征稳定性
     print("Feature stability:", feature_stability)
-    # print('len:', len())
     df_selected_features = pd.DataFrame({
         'features': list(features),
         'feature stability': list(feature_stability),})

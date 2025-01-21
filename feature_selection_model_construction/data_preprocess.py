@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-# 获取环境变量
+# Getting environment variables
 PARP_DIR = os.environ.get('PARP_DIR')
 
 def drop_unuse_coloums(input_file):
@@ -10,7 +10,7 @@ def drop_unuse_coloums(input_file):
     Args:
         input_file (Excel): Patients file in xlsx format.
     """
-    # 读取 Excel 数据
+    # Reading Excel Data
     df_basic_info_sheet = pd.read_excel(io=input_file, engine='openpyxl', index_col=False)
     # Drop columns which are unuseless for analysis.
     df_basic_info_sheet = df_basic_info_sheet.drop(
@@ -30,7 +30,7 @@ def map_chinese_to_eng(df, output_file):
         df (Excel): Patients informations in dataframe format.
         output_file(Dataframe): Output as excel file.
     """
-    #数据预处理，把中文变成英文；
+    #Data preprocessing, transforming Chinese into English
     name_match_dict = {
         '年龄': 'Age',
         'BRCA突变（0=﹣，1=﹢）': 'BRCA status',
@@ -66,13 +66,12 @@ def map_chinese_to_eng(df, output_file):
         'OS（month）': 'OS(month)',
         'OS类别': 'OS_type',
     }
-    # 读取 Excel 文件
-    label_file = F"{PARP_DIR}/config/label_match.xlsx"  # 替换为你的 Excel 文件路径
+    # Reading Excel Files
+    label_file = F"{PARP_DIR}/config/label_match.xlsx" 
     df_label_file = pd.read_excel(label_file, engine='openpyxl')
-    # 将数据框转换为字典
+    # Converts the data frame to a dictionary
     translation_dict = dict(zip(df_label_file.iloc[:, 0], df_label_file.iloc[:, 1]))
     name_match_dict.update(translation_dict)
-    print(name_match_dict)
     df_basic_info_sheet_after_select = df[name_match_dict.keys()]
     df_basic_info_sheet_after_select.rename(columns=name_match_dict, inplace=True)
     df_basic_info_sheet_after_select.to_excel(output_file, index=False)
@@ -80,7 +79,7 @@ def map_chinese_to_eng(df, output_file):
     return df_basic_info_sheet_after_select
 
 def abnormal_value_process(df):
-    #处理异常值
+    # Handling outliers
     df['年龄'].replace('-1', -1, inplace=True)
     df.fillna(-1, inplace=True)
 
@@ -89,10 +88,10 @@ def only_keep_ola_nla(df_data):
     print(F'After delete non-ola-nila patients:{df_data.shape}')
     return df_data
 
-# 合并BRCA 和 HRD 的状态
+# The status of BRCA and HRD are merged
 def combine_brca_hrd(df_info):
     brca_status = []
-    # 遍历每一行并获取任意一列的值
+    # Iterate over each row and get the value of any column
     for index, row in df_info.iterrows():
         if row['BRCA status'] ==1 or row['HRD'] == 1:
             brca_status.append(1)
@@ -102,31 +101,9 @@ def combine_brca_hrd(df_info):
             brca_status.append(-1)
     df_info['BRCA_HRD status'] = brca_status
 
-#处理 Y label
-def get_label_type(df_info, col_name, target_label_name, thresh=0):
-    label_y = []
-    # 遍历每一行并获取任意一列的值
-    for index, row in df_info.iterrows():
-        if row['First/second line and posterior line'] == 0:
-            thresh = 24
-        else:
-            thresh = 12
-        
-        try:
-            if row[col_name] > thresh:
-                label_y.append(1)
-            else:
-                label_y.append(0)
-        except Exception as e:
-            print(e)
-            label_y.append(0)
-    df_info[target_label_name] = label_y
 
 def delete_abnormal_column(df):
-    # 统计每一列中 -1 出现的比例
     percentage_minus_one = df.apply(lambda col: (col == -1).mean())
-
-    # 挑选出比例大于 0.5 的列名并转为 list
     selected_columns = percentage_minus_one[percentage_minus_one > 0.5].index.tolist()
     
     if 'BRCA status' in selected_columns:
@@ -134,7 +111,6 @@ def delete_abnormal_column(df):
     if 'HRD' in selected_columns:
         selected_columns.remove('HRD')
 
-    # 删掉空缺比例大于 0.5 的列
     print('Origin Shape:', df.shape)
     print('Drop coloumns:', len(selected_columns))
     df_after_del = df.drop(selected_columns, axis=1)
