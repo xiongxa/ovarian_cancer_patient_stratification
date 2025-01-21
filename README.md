@@ -1,1 +1,7 @@
 # parp_efficacy_predict
+1.First run PARP/parp_risk_stratification/feature_selection/data_preprocess.py
+2.Run PARP/parp_risk_stratification/feature_selection/uni_cox_analysis.py
+3.Run PARP/parp_risk_stratification/feature_selection/feature_selection_combine.py
+4.Run PARP/parp_risk_stratification/feature_selection/multi_cox_stepwise_analysis.py
+5.Run PARP/parp_risk_stratification/feature_selection/calculate_km_curve_c_index.py
+6.Run PARP/parp_risk_stratification/feature_selection/calculate_kendalltau_coeff.py
