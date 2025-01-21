@@ -1,0 +1,8 @@
+seaborn
+matplotlib
+pandas
+scipy
+statsmodels
+lifelines
+numpy
+scikit-learn
